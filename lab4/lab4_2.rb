@@ -1,60 +1,165 @@
-class CashMachine
-  def readfile
-    if File.exist?("Balance.txt")
-      File.open("Balance.txt") do
-        balance_file = File.readlines("Balance.txt")
-        bal = balance_file[0]
-        @balance = bal.to_i
+module Resource
+  def connection(routes, controller)
+    if routes.nil?
+      puts "No route matches for #{self}"
+      return
+    end
+    if controller == 'post'
+      loop do
+        print 'Choose verb to interact with resources (GET/POST/PUT/DELETE) / q to exit: '
+        verb = gets.chomp.upcase
+        break if verb.downcase == 'q'
+
+        action = nil
+
+        if verb.upcase == 'GET'
+          print 'Choose action (index/show) / q to exit: '
+          action = gets.chomp
+          break if action == 'q'
+        end
+
+        begin
+          action.nil? ? routes[verb].call : routes[verb][action].call
+        rescue
+          puts "Incorrect action, follow instruction"
+        end
       end
-    else
-      @balance = 100.0
-    end
-  end
+      end
+    if controller == 'comments'
+      loop do
+      print 'Choose verb to interact with resources (COMM) / q to exit:'
+      verb = gets.chomp.upcase
+      break if verb.downcase == 'q'
 
-  def deposit
-    puts "Введите сумму"
-    value=gets.chomp.to_i
-    dep=@balance
-    if value>0
-      newBalance=dep+value
-      File.write("Balance.txt", "#{newBalance}", mode: "w")
-    else
-      puts "Введите сумму больше 0"
-    end
-  end
-
-  def withdraw
-    puts "Введите сумму"
-    value=gets.chomp.to_i
-    dep=@balance
-    if value>0 and value<=dep
-      newBalance=dep-value
-      File.write("Balance.txt", "#{newBalance}", mode: "w")
-    else
-      puts "На вашем счету недостаточно денег, либо введите сумму больше 0"
-    end
-  end
-
-  def balance
-    b = @balance
-    puts b
-  end
-
-  def init
-    loop do
-      readfile
-      puts "внести деньги -> D, вывести деньги -> W, проверить баланс -> B или выйти -> Q"
-      value=gets.chomp
-      case value
-      when "d" then deposit
-      when "w" then withdraw
-      when "b" then balance
-      when "q" then break
+      begin
+        routes[verb].call
+      rescue
+        puts "Enter error please follow instructions"
       end
     end
+    end
+  end
+end
+
+class PostsController
+  extend Resource
+
+  def initialize
+    @posts = Hash[]
+    @array = []
+  end
+
+  def index
+    @posts.each do |key, value|
+      puts "#{key}: #{value}"
+    end
+  end
+
+  def show
+    puts 'Enter id'
+    id = gets.to_i
+    if @posts[id] != nil
+      puts @posts[id]
+    else
+      puts "Post with id:#{id} not found"
+    end
+  end
+
+  def create
+    puts 'Enter text'
+    text = gets.chomp
+    if @array.size == 0
+      number = @posts.size
+      @posts[number] = text
+      puts "#{number}:#{text}"
+    else
+      number = @array[0]
+      @posts[number] = text
+      puts "#{number} : #{text}"
+    end
+  end
+
+  def update
+    puts 'Enter id'
+    id = gets.to_i
+    if @posts[id] != nil
+      puts 'Enter text'
+      text = gets.chomp
+      @posts[id] = text
+    else
+      puts "Post with id:#{id} not found"
+    end
+  end
+
+  def destroy
+    puts 'Enter id'
+    id=gets.to_i
+    if @posts[id] != nil
+      @array.unshift(id)
+      @posts.delete(id)
+    else
+      puts "Post with id:#{id} not found"
+    end
+  end
+end
+
+class CommentsController
+  extend Resource
+
+  def initialize
+    @commArr = []
+  end
+
+  def comments
+    puts "Enter comment"
+    comm = gets.chomp
+    @commArr.unshift(comm)
+    puts @commArr
   end
 
 end
 
-a=CashMachine.new
-a.init
+class Router
+  def initialize
+    @routes = {}
+  end
+
+  def init
+    vocabulary1(PostsController, 'posts')
+    vocabulary2(CommentsController, 'comments')
+
+    loop do
+      print 'Choose resource you want to interact (1 - Posts, 2 - Comments, q - Exit): '
+      choise = gets.chomp
+
+      PostsController.connection(@routes['posts'], 'post') if choise == '1'
+      CommentsController.connection(@routes['comments'], 'comments') if choise == '2'
+      break if choise == 'q'
+    end
+    puts 'Good bye!'
+  end
+
+  def vocabulary2(klass, keyword)
+    controller = klass.new
+    @routes[keyword] = {
+      'COMM' => controller.method(:comments)
+    }
+  end
+
+  def vocabulary1(klass, keyword)
+    controller = klass.new
+    @routes[keyword] = {
+      'GET' => {
+        'index' => controller.method(:index),
+        'show' => controller.method(:show)
+      },
+      'POST' => controller.method(:create),
+      'PUT' => controller.method(:update),
+      'DELETE' => controller.method(:destroy)
+    }
+  end
+end
+
+router = Router.new
+
+router.init
