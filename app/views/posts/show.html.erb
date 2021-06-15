@@ -1,0 +1,24 @@
+<h1><%= @post.title %></h1>
+<p><%= @post.description %></p>
+<%= link_to "Edit", edit_post_path(@post), :class => "btn btn-warning" %>
+<%= link_to "Remove", post_path(@post), method: :delete, data: {confirm: "Do you want remove report?"},
+            :class => "btn btn-danger" %>
+
+<span>Marks</span>
+<%= form_for([@post, @post.marks.build]) do |f| %>
+  <% if @mark.errors.any? %>
+    <% @mark.errors.full_messages.each do |msg| %>
+      <div class="alert alert-danger"><%= msg %></div>
+    <% end %>
+  <% end %>
+  <p>
+    Points:<%= f.text_field :title, :class => 'form-control' %>
+  </p>
+<!--  <p>-->
+<!--    Letter<%#= f.text_area :description, :class => 'form-control' %>-->
+<!--  </p>-->
+  <p>
+    <%= f.submit :class => 'btn btn-success' %>
+  </p>
+
+<% end %>
