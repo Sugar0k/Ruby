@@ -3,16 +3,22 @@
 <%= link_to "Edit", edit_post_path(@post), :class => "btn btn-warning" %>
 <%= link_to "Remove", post_path(@post), method: :delete, data: {confirm: "Do you want remove report?"},
             :class => "btn btn-danger" %>
+<br>
+<h2>Marks</h2>
+<% @post.marks.each do |mark| %>
+  <h2>Letter: <%= mark.letter %></h2>
+  <h3>Points: <%= mark.points %></h3>
 
-<span>Marks</span>
+<% end %>
+
 <%= form_for([@post, @post.marks.build]) do |f| %>
-  <% if @mark.errors.any? %>
-    <% @mark.errors.full_messages.each do |msg| %>
+  <% if @post.errors.any? %>
+    <% @post.errors.full_messages.each do |msg| %>
       <div class="alert alert-danger"><%= msg %></div>
     <% end %>
   <% end %>
   <p>
-    Points:<%= f.text_field :title, :class => 'form-control' %>
+    <h3>Points: <%= f.text_field :points, :class => 'form-control' %></h3>
   </p>
 <!--  <p>-->
 <!--    Letter<%#= f.text_area :description, :class => 'form-control' %>-->
